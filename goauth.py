@@ -5,8 +5,6 @@ class OAuthReturnHandler:
 		oself.httpd_access_token_callback = None
 		
 		import BaseHTTPServer
-		import SocketServer
-
 		class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 			def log_message(self, format, *args): pass
 			def do_GET(webself):
@@ -30,9 +28,21 @@ class OAuthReturnHandler:
 					webself.send_response(404)
 					webself.end_headers()
 
-		oself.httpd = BaseHTTPServer.HTTPServer(("", 0), Handler)
+		oself.handler = Handler		
+		def tryOrFail(fn):
+			try: fn(); return True
+			except: return False
+		# Try with some default ports first to avoid cluttering the users Google Authorized Access list.
+		tryOrFail(lambda: oself.startserver(port = 8123)) or \
+		tryOrFail(lambda: oself.startserver(port = 8321)) or \
+		oself.startserver(port = 0)
+
 		_,oself.port = oself.httpd.server_address
 		oself.oauth_callback_url = "http://localhost:%d/get_access_token" % oself.port
+
+	def startserver(self, port):
+		import BaseHTTPServer
+		self.httpd = BaseHTTPServer.HTTPServer(("", port), self.handler)
 
 	def wait_callback_response(self):
 		while self.httpd_access_token_callback == None:
