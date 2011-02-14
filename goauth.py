@@ -52,16 +52,39 @@ class OAuthReturnHandler:
 
 # client must be some gdata.client.GDClient with source set to the application name
 def authorize(client):
+	import os.path
+	cfgfilename = os.path.expanduser("~/." + client.source + ".goauth.cfg")
+
 	import gdata.gauth
 	CONSUMER_KEY = 'anonymous'
 	CONSUMER_SECRET = 'anonymous'
+
+	# Try to use a previously stored auth token.
+	try:
+		import ast
+		token_str, token_secret = ast.literal_eval(open(cfgfilename).read())
+		client.auth_token = gdata.gauth.OAuthHmacToken(
+			CONSUMER_KEY, CONSUMER_SECRET, token_str,
+			token_secret, gdata.gauth.ACCESS_TOKEN)
+		
+		# Test if this auth_token is valid. This would throw an exception otherwise.
+		client.GetFeed(client.GetFeedUri())
+
+		# everything ok, we can use this token
+		return
+		
+	except:
+		pass
+
+	# Get a new access token.
+	# Read here for details: http://code.google.com/intl/de/apis/gdata/docs/auth/oauth.html
 
 	# There seem to be no better way to set xoauth_displayname.
 	# xoauth_displayname is needed to display the application name.
 	# See: http://code.google.com/intl/de/apis/accounts/docs/OAuth.html#tokensIdentifying
 	import urllib
 	req_token_url = gdata.gauth.REQUEST_TOKEN_URL + '?xoauth_displayname=' + urllib.quote(client.source)
-		  
+	
 	oauthreturnhandler = OAuthReturnHandler()
 	request_token = client.GetOAuthToken(
 		scopes = client.auth_scopes,
@@ -83,3 +106,8 @@ def authorize(client):
 	# Upgrade the token and save in the user's datastore
 	access_token = client.GetAccessToken(request_token)
 	client.auth_token = access_token
+	
+	# Store the access token for later use. Don't care if that fails.
+	try: open(cfgfilename, "w").write(repr((access_token.token, access_token.token_secret)))
+	except: pass
+	
