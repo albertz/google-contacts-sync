@@ -40,14 +40,15 @@ class OAuthReturnHandler:
 		return self.httpd_access_token_callback
 
 
+# client must be some gdata.client.GDClient with source set to the application name
 def authorize(client):
 	import gdata.gauth
 	CONSUMER_KEY = 'anonymous'
 	CONSUMER_SECRET = 'anonymous'
 
 	# There seem to be no better way to set xoauth_displayname.
-	# xoauth_displayname is needed to display the application name and to avoid
-	# cluttering the users Google Authorized Access list.
+	# xoauth_displayname is needed to display the application name.
+	# See: http://code.google.com/intl/de/apis/accounts/docs/OAuth.html#tokensIdentifying
 	import urllib
 	req_token_url = gdata.gauth.REQUEST_TOKEN_URL + '?xoauth_displayname=' + urllib.quote(client.source)
 		  
