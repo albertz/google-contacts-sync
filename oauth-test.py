@@ -1,13 +1,10 @@
 #!/usr/bin/python
 
 import gdata.contacts.client
-
 client = gdata.contacts.client.ContactsClient(source='Test app')
 
 import goauth
-
-SCOPES = [ "http://www.google.com/m8/feeds/" ] # contacts
-goauth.authorize(SCOPES, client)
+goauth.authorize(client)
 
 def PrintFeed(feed):
   for i, entry in enumerate(feed.entry):

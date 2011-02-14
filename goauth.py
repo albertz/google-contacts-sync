@@ -40,13 +40,13 @@ class OAuthReturnHandler:
 		return self.httpd_access_token_callback
 
 
-def authorize(scopes, client):
+def authorize(client):
 	CONSUMER_KEY = 'anonymous'
 	CONSUMER_SECRET = 'anonymous'
 
 	oauthreturnhandler = OAuthReturnHandler()
 	request_token = client.GetOAuthToken(
-		scopes, oauthreturnhandler.oauth_callback_url, CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
+		client.auth_scopes, oauthreturnhandler.oauth_callback_url, CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
 
 	loginurl = request_token.generate_authorization_url()
 	loginurl = str(loginurl)
