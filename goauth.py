@@ -1,3 +1,6 @@
+# simple Google OAuth functions for desktop applications
+# by Albert Zeyer, 2011
+# code under zlib
 
 
 class OAuthReturnHandler:
