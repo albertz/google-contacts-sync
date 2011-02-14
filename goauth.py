@@ -41,12 +41,22 @@ class OAuthReturnHandler:
 
 
 def authorize(client):
+	import gdata.gauth
 	CONSUMER_KEY = 'anonymous'
 	CONSUMER_SECRET = 'anonymous'
 
+	# There seem to be no better way to set xoauth_displayname.
+	# xoauth_displayname is needed to display the application name and to avoid
+	# cluttering the users Google Authorized Access list.
+	import urllib
+	req_token_url = gdata.gauth.REQUEST_TOKEN_URL + '?xoauth_displayname=' + urllib.quote(client.source)
+		  
 	oauthreturnhandler = OAuthReturnHandler()
 	request_token = client.GetOAuthToken(
-		client.auth_scopes, oauthreturnhandler.oauth_callback_url, CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
+		scopes = client.auth_scopes,
+		next = oauthreturnhandler.oauth_callback_url,
+		consumer_key = CONSUMER_KEY, consumer_secret = CONSUMER_SECRET,
+		url = req_token_url)
 
 	loginurl = request_token.generate_authorization_url()
 	loginurl = str(loginurl)
@@ -57,7 +67,6 @@ def authorize(client):
 	httpd_access_token_callback = oauthreturnhandler.wait_callback_response()
 	print "done"
 
-	import gdata.gauth
 	request_token = gdata.gauth.AuthorizeRequestToken(request_token, httpd_access_token_callback)
 
 	# Upgrade the token and save in the user's datastore
