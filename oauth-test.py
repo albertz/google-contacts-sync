@@ -5,7 +5,7 @@ import gdata.contacts.client
 
 CONSUMER_KEY = 'anonymous'
 CONSUMER_SECRET = 'anonymous'
-SCOPES = [ "https://www.google.com/m8/feeds/" ] # contacts
+SCOPES = [ "http://www.google.com/m8/feeds/" ] # contacts
 
 client = gdata.contacts.client.ContactsClient(source='Test app')
 
@@ -51,20 +51,15 @@ request_token = client.GetOAuthToken(
 
 loginurl = request_token.generate_authorization_url()
 loginurl = str(loginurl)
-print "opening oauth login page ..."
+print "* open oauth login page"
 import webbrowser; webbrowser.open(loginurl)
 
-print "waiting for redirect callback ..."
+print "* waiting for redirect callback ...",
 while httpd_access_token_callback == None:
 	httpd.handle_request()
 
 print "done"
 
-
-#oauth_token = gdata.auth.OAuthTokenFromUrl(httpd_access_token_callback)
-#if not oauth_token:
-#	print 'Error: No oauth_token found in the URL'
-#	quit()
 
 request_token = gdata.gauth.AuthorizeRequestToken(request_token, httpd_access_token_callback)
 
@@ -75,7 +70,9 @@ client.auth_token = access_token
 
 def PrintFeed(feed):
   for i, entry in enumerate(feed.entry):
-    print '\n%s %s' % (i+1, entry.name.full_name.text)
+    print "entry", i, ":"
+    if entry.name:
+	  print entry.name.full_name.text
     if entry.content:
       print '    %s' % (entry.content.text)
     # Display the primary email address for the contact.
