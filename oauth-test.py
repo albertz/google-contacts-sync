@@ -9,40 +9,10 @@ SCOPES = [ "http://www.google.com/m8/feeds/" ] # contacts
 
 client = gdata.contacts.client.ContactsClient(source='Test app')
 
-import BaseHTTPServer
-import SocketServer
-
-httpd_access_token_callback = None
-class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
-	def do_GET(self):
-		if self.path.startswith("/get_access_token?"):
-			global httpd_access_token_callback
-			httpd_access_token_callback = self.path
-
-			self.send_response(200)
-			self.send_header("Content-type", "text/html")
-			self.end_headers()
-			self.wfile.write("""
-				<html><head><title>OAuth return</title></head>
-				<body onload="onLoad()">
-				<script type="text/javascript">
-				function onLoad() {
-					ww = window.open(window.location, "_self");
-					ww.close();
-				}
-				</script>
-				</body></html>""")
-		else:
-			self.send_response(404)
-			self.end_headers()
-
-	def log_message(self, format, *args): pass
-httpd = BaseHTTPServer.HTTPServer(("", 0), Handler)
-_,port = httpd.server_address
-
-oauth_callback_url = 'http://localhost:%d/get_access_token' % port
+import goauth
+oauthreturnhandler = goauth.OAuthReturnHandler()
 request_token = client.GetOAuthToken(
-    SCOPES, oauth_callback_url, CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
+    SCOPES, oauthreturnhandler.oauth_callback_url, CONSUMER_KEY, consumer_secret=CONSUMER_SECRET)
 
 # When using HMAC-SHA1, you need to persist the request_token in some way.
 # You'll need the token secret when upgrading to an access token later on.
@@ -55,9 +25,7 @@ print "* open oauth login page"
 import webbrowser; webbrowser.open(loginurl)
 
 print "* waiting for redirect callback ...",
-while httpd_access_token_callback == None:
-	httpd.handle_request()
-
+httpd_access_token_callback = oauthreturnhandler.wait_callback_response()
 print "done"
 
 
